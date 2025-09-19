@@ -179,19 +179,23 @@ class ESC50Dataset(Dataset):
         tubelets = mel_spec.unsqueeze(0).unsqueeze(-1)  # [1, time_steps, n_mels, 1]
         return tubelets
 
-def create_esc50_splits():
+def create_esc50_splits(path):
     """Load ESC-50 metadata and split into train/val/test."""
-    meta_csv = ESC50_ROOT / "meta" / "esc50.csv"
+    meta_csv = Path(path) / "meta" / "esc50.csv"
     df = pd.read_csv(meta_csv)
     train_df = df[df.fold.isin([1,2,3])]
-    val_df   = df[df.fold == 4]
-    test_df  = df[df.fold == 5]
+    val_df = df[df.fold == 4]
+    test_df = df[df.fold == 5]
     return train_df, val_df, test_df
 
-def create_dataloaders(model_type='sequence', batch_size=32,
+def create_dataloaders(esc50_path=None, model_type='sequence', batch_size=32,
                       num_workers=4, augment=True, augment_factor=2):
-    """Create DataLoaders using ESC50_ROOT."""
-    train_df, val_df, test_df = create_esc50_splits()
+    """Create DataLoaders using ESC 50 path."""
+
+    if esc50_path is None:
+        esc50_path = ESC50_ROOT
+
+    train_df, val_df, test_df = create_esc50_splits(esc50_path)
     
     # Create preprocessors
     train_preprocessor = ESC50Preprocessor(augment=augment)
@@ -199,17 +203,17 @@ def create_dataloaders(model_type='sequence', batch_size=32,
     
     # Create datasets
     train_dataset = ESC50Dataset(
-        train_df, ESC50_ROOT, train_preprocessor,
+        train_df, esc50_path, train_preprocessor,
         model_type=model_type, augment=augment, augment_factor=augment_factor
     )
     
     val_dataset = ESC50Dataset(
-        val_df, ESC50_ROOT, val_preprocessor,
+        val_df, esc50_path, val_preprocessor,
         model_type=model_type, augment=False
     )
     
     test_dataset = ESC50Dataset(
-        test_df, ESC50_ROOT, val_preprocessor,
+        test_df, esc50_path, val_preprocessor,
         model_type=model_type, augment=False
     )
     
