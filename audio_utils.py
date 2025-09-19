@@ -84,7 +84,7 @@ class ESC50Preprocessor:
         
         # Volume scaling
         if torch.rand(1) < 0.4:
-            scale = torch.uniform(0.85, 1.15, (1,))
+            scale = torch.empty(1).uniform_(0.85, 1.15).to(waveform.device, waveform.dtype)
             waveform = waveform * scale
         
         return waveform

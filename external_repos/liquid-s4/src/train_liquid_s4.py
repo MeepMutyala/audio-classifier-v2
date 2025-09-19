@@ -14,7 +14,7 @@ def train():
     print(f"Training Liquid-S4 on {device}")
     
     train_loader, val_loader, test_loader, num_classes = create_dataloaders(
-        esc50_path='data/ESC-50',
+        esc50_path='/kaggle/working/repo/data/ESC-50',
         model_type='sequence', 
         batch_size=32,
         num_workers=2,
