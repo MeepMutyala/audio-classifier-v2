@@ -91,3 +91,66 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim, pos):
 
     emb = np.concatenate([emb_sin, emb_cos], axis=1)  # (M, D)
     return emb
+
+def get_3d_sincos_pos_embed_rectangular(embed_dim, grid_height, grid_width, grid_depth, cls_token=False, uniform_power=False):
+    """
+    3D rectangular positional embeddings for non-square grids (like audio spectrograms)
+    
+    grid_height: int - height of the grid (frequency bins)  
+    grid_width: int - width of the grid (time steps)
+    grid_depth: int - depth of the grid (temporal frames)
+    
+    returns:
+    pos_embed: [grid_depth*grid_height*grid_width, embed_dim] w/o cls_token or [1+grid_depth*grid_height*grid_width, embed_dim] w/ cls_token
+    """
+    # Create grids for each dimension
+    grid_d = np.arange(grid_depth, dtype=float)
+    grid_h = np.arange(grid_height, dtype=float)  
+    grid_w = np.arange(grid_width, dtype=float)
+    
+    # Create meshgrid - order is important for indexing as d,h,w
+    grid_h, grid_d, grid_w = np.meshgrid(grid_h, grid_d, grid_w)
+    
+    # Allocate embedding dimensions
+    if not uniform_power:
+        h_embed_dim = embed_dim // 4
+        w_embed_dim = embed_dim // 4  
+        d_embed_dim = embed_dim // 2
+    else:
+        h_embed_dim = w_embed_dim = d_embed_dim = int(np.ceil(embed_dim / 6)) * 2
+        
+    # Generate sincos for each dimension
+    emb_h = get_1d_sincos_pos_embed_from_grid(h_embed_dim, grid_h)  # [DHW, D1]
+    emb_w = get_1d_sincos_pos_embed_from_grid(w_embed_dim, grid_w)  # [DHW, D2] 
+    emb_d = get_1d_sincos_pos_embed_from_grid(d_embed_dim, grid_d)  # [DHW, D3]
+    
+    # Concatenate all embeddings
+    pos_embed = np.concatenate([emb_d, emb_h, emb_w], axis=1)  # [DHW, embed_dim]
+    pos_embed = pos_embed.reshape(-1, embed_dim)
+    
+    if cls_token:
+        pos_embed = np.concatenate([np.zeros([1, embed_dim]), pos_embed], axis=0)
+    
+    return pos_embed
+
+
+def get_2d_sincos_pos_embed_rectangular(embed_dim, grid_height, grid_width, cls_token=False):
+    """
+    2D rectangular positional embeddings for non-square grids
+    """
+    grid_h = np.arange(grid_height, dtype=float)
+    grid_w = np.arange(grid_width, dtype=float)
+    grid_h, grid_w = np.meshgrid(grid_h, grid_w)
+    
+    h_embed_dim = embed_dim // 2
+    w_embed_dim = embed_dim - h_embed_dim
+    
+    emb_h = get_1d_sincos_pos_embed_from_grid(h_embed_dim, grid_h)
+    emb_w = get_1d_sincos_pos_embed_from_grid(w_embed_dim, grid_w)
+    
+    pos_embed = np.concatenate([emb_h, emb_w], axis=1)
+    
+    if cls_token:
+        pos_embed = np.concatenate([np.zeros([1, embed_dim]), pos_embed], axis=0)
+        
+    return pos_embed

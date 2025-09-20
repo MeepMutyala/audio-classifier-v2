@@ -124,15 +124,19 @@ class VisionTransformer(nn.Module):
         
         if self.is_video:
             grid_depth = self.num_frames // self.tubelet_size  # 8
-            # Pass separate scalar arguments, NOT a tuple
-            sincos = get_3d_sincos_pos_embed(
-                embed_dim, grid_height, grid_width, grid_depth, cls_token=False, uniform_power=self.uniform_power
+            # Use custom rectangular embedding function
+            sincos = get_3d_sincos_pos_embed_rectangular(
+                embed_dim, grid_height, grid_width, grid_depth,
+                cls_token=False, uniform_power=self.uniform_power
             )
         else:
-            # Pass separate scalar arguments, NOT a tuple  
-            sincos = get_2d_sincos_pos_embed(embed_dim, grid_height, grid_width, cls_token=False)
+            # Use custom rectangular embedding function
+            sincos = get_2d_sincos_pos_embed_rectangular(
+                embed_dim, grid_height, grid_width, cls_token=False
+            )
         
         pos_embed.copy_(torch.from_numpy(sincos).float().unsqueeze(0))
+
 
 
     def _init_weights(self, m):
