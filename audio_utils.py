@@ -163,20 +163,24 @@ class ESC50Dataset(Dataset):
         label = self.class_to_idx[row['category']]
         return data, torch.tensor(label, dtype=torch.long)
     
-    def _convert_to_tubelets(self, mel_spec):
-        """Convert mel-spectrogram to tubelet format for V-JEPA2"""
-        tubelet_size = 16  # Adjust based on V-JEPA2 config
-        time_steps, n_mels = mel_spec.shape
-        
-        # Create overlapping temporal windows
-        if time_steps < tubelet_size:
-            # Pad if too short
-            padding = tubelet_size - time_steps
-            mel_spec = torch.nn.functional.pad(mel_spec, (0, 0, 0, padding))
-            time_steps = tubelet_size
-        
-        # Reshape to tubelet format [1, T, H, W]
-        tubelets = mel_spec.unsqueeze(0).unsqueeze(-1)  # [1, time_steps, n_mels, 1]
+    def convert_to_tubelets(self, mel_spec):
+        """
+        Convert a 2D mel-spectrogram into 3D tubelet format [frames, freq, time_per_frame].
+        """
+        num_frames = 16  # must match model num_frames
+        time_steps, n_mels = mel_spec.shape   # e.g., (313, 128)
+
+        # Compute how many time bins per frame
+        time_per_frame = time_steps // num_frames  # floor division
+        effective_length = num_frames * time_per_frame
+
+        # Trim to exact multiple of frames
+        mel_spec = mel_spec[:effective_length]  # shape (num_frames*time_per_frame, n_mels)
+
+        # Reshape: (num_frames, time_per_frame, n_mels) → (num_frames, n_mels, time_per_frame)
+        frames = mel_spec.view(num_frames, time_per_frame, n_mels)
+        tubelets = frames.permute(0, 2, 1)  # [16, 128, 20]
+
         return tubelets
 
 def create_esc50_splits(path):
