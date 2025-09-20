@@ -42,8 +42,8 @@ def train():
     model = LiquidS4AudioClassifier(
         n_mels=128,
         num_classes=num_classes,
-        d_model=64,
-        n_layers=8,
+        d_model=256,
+        n_layers=12,
         device=device
     ).to(device)
 

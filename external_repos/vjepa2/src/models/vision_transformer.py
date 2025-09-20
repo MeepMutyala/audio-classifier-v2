@@ -112,20 +112,6 @@ class VisionTransformer(nn.Module):
         # ------ initialize weights
         if self.pos_embed is not None:
             self._init_pos_embed(self.pos_embed.data)  # sincos pos-embed
-            # RESIZE POSITIONAL EMBEDDINGS FOR ESC-50 MEL SPECTROGRAMS
-            # After pos_embed initialization
-            if self.is_video:
-                # For video/tubelet mode: T * H * W patches  
-                seq_len = (self.num_frames // self.tubelet_size) * \
-                        (self.img_height // self.patch_size) * \
-                        (self.img_width // self.patch_size)
-            else:
-                # For regular "image" mode (including mel spectrograms treated as 2D images)
-                # img_height = frequency bins (128), img_width = time steps (313)
-                seq_len = (self.img_height // self.patch_size) * (self.img_width // self.patch_size)
-
-            # Resize pos_embed to match actual sequence length
-            self.pos_embed.data = self._resize_pos_embed(self.pos_embed.data, seq_len)
 
         self.init_std = init_std
         self.apply(self._init_weights)
@@ -133,14 +119,19 @@ class VisionTransformer(nn.Module):
 
     def _init_pos_embed(self, pos_embed):
         embed_dim = pos_embed.size(-1)
-        grid_size = self.img_height // self.patch_size  # TODO: update; currently assumes square input
+        grid_height = self.img_height // self.patch_size  # 128 // 16 = 8
+        grid_width = self.img_width // self.patch_size    # 313 // 16 = 19
+        
         if self.is_video:
-            grid_depth = self.num_frames // self.tubelet_size
+            grid_depth = self.num_frames // self.tubelet_size  # 16 // 2 = 8
+            # Use the correct 3D grid dimensions
             sincos = get_3d_sincos_pos_embed(
-                embed_dim, grid_size, grid_depth, cls_token=False, uniform_power=self.uniform_power
+                embed_dim, (grid_height, grid_width), grid_depth, cls_token=False, uniform_power=self.uniform_power
             )
         else:
-            sincos = get_2d_sincos_pos_embed(embed_dim, grid_size, cls_token=False)
+            # Use the correct 2D grid dimensions  
+            sincos = get_2d_sincos_pos_embed(embed_dim, (grid_height, grid_width), cls_token=False)
+        
         pos_embed.copy_(torch.from_numpy(sincos).float().unsqueeze(0))
 
     def _init_weights(self, m):
