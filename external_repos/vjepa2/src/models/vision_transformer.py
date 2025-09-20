@@ -119,22 +119,19 @@ class VisionTransformer(nn.Module):
 
     def _init_pos_embed(self, pos_embed):
         embed_dim = pos_embed.size(-1)
-        grid_height = self.img_height // self.patch_size  # 8
-        grid_width = self.img_width // self.patch_size    # 19
-        
+        H = self.img_height // self.patch_size   # 128//16 = 8
+        W = self.img_width  // self.patch_size   # 20//16  = 1 (or ensure >=1)
         if self.is_video:
-            grid_depth = self.num_frames // self.tubelet_size  # 8
-            # Use custom rectangular embedding function
+            D = self.num_frames // self.tubelet_size  # 16//2 = 8
             sincos = get_3d_sincos_pos_embed_rectangular(
-                embed_dim, grid_height, grid_width, grid_depth,
-                cls_token=False, uniform_power=self.uniform_power
+                embed_dim, H, W, D, cls_token=False, uniform_power=self.uniform_power
             )
         else:
-            # Use custom rectangular embedding function
+            # fallback if ever used in 2D mode
+            from src.models.utils.pos_embs import get_2d_sincos_pos_embed_rectangular
             sincos = get_2d_sincos_pos_embed_rectangular(
-                embed_dim, grid_height, grid_width, cls_token=False
+                embed_dim, H, W, cls_token=False
             )
-        
         pos_embed.copy_(torch.from_numpy(sincos).float().unsqueeze(0))
 
 
