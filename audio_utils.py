@@ -162,23 +162,28 @@ class ESC50Dataset(Dataset):
         return data, torch.tensor(label, dtype=torch.long)
     
     def convert_to_tubelets(self, mel_spec):
-        """
-        Convert a 2D mel-spectrogram into 3D tubelet format [frames, freq, time_per_frame].
-        """
-        num_frames = 16  # must match model num_frames
-        time_steps, n_mels = mel_spec.shape   # e.g., (313, 128)
-
-        # Compute how many time bins per frame
-        time_per_frame = time_steps // num_frames  # floor division
+        """Convert mel-spectrogram to tubelet format for V-JEPA2"""
+        print(f"DEBUG: convert_to_tubelets input shape: {mel_spec.shape}")
+        
+        num_frames = 16
+        time_steps, n_mels = mel_spec.shape
+        print(f"DEBUG: time_steps={time_steps}, n_mels={n_mels}")
+        
+        time_per_frame = time_steps // num_frames
+        print(f"DEBUG: time_per_frame={time_per_frame}")
+        
         effective_length = num_frames * time_per_frame
-
+        print(f"DEBUG: effective_length={effective_length}")
+        
         # Trim to exact multiple of frames
-        mel_spec = mel_spec[:effective_length]  # shape (num_frames*time_per_frame, n_mels)
-
+        mel_spec = mel_spec[:effective_length]
+        print(f"DEBUG: After trim: {mel_spec.shape}")
+        
         # Reshape: (num_frames, time_per_frame, n_mels) → (num_frames, n_mels, time_per_frame)
         frames = mel_spec.view(num_frames, time_per_frame, n_mels)
-        tubelets = frames.permute(0, 2, 1)  # [16, 128, 20]
-
+        tubelets = frames.permute(0, 2, 1)
+        
+        print(f"DEBUG: Final tubelets shape: {tubelets.shape}")
         return tubelets
 
 def create_esc50_splits(path):
