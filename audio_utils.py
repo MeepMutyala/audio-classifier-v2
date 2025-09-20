@@ -150,12 +150,8 @@ class ESC50Dataset(Dataset):
         # Process based on model type
         if self.model_type == 'tubelet':
             # For V-JEPA2: create tubelets
-            if hasattr(preprocessor, 'load_and_preprocess_tubelets'):
-                data = preprocessor.load_and_preprocess_tubelets(audio_path)
-            else:
-                # Fallback: convert mel-spec to tubelet format
-                mel_spec = preprocessor.load_and_preprocess(audio_path)
-                data = self._convert_to_tubelets(mel_spec)
+            mel_spec = preprocessor.load_and_preprocess(audio_path)
+            data = self.convert_to_tubelets(mel_spec)
         else:
             # For Mamba and Liquid S4: regular mel-spectrograms
             data = preprocessor.load_and_preprocess(audio_path)
