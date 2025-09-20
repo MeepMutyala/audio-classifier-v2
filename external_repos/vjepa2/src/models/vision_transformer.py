@@ -15,6 +15,7 @@ from src.models.utils.patch_embed import PatchEmbed, PatchEmbed3D
 from src.models.utils.pos_embs import get_2d_sincos_pos_embed, get_3d_sincos_pos_embed
 from src.utils.tensors import trunc_normal_
 
+import torch.nn.functional as F
 
 class VisionTransformer(nn.Module):
     """Vision Transformer"""
@@ -111,6 +112,21 @@ class VisionTransformer(nn.Module):
         # ------ initialize weights
         if self.pos_embed is not None:
             self._init_pos_embed(self.pos_embed.data)  # sincos pos-embed
+            # RESIZE POSITIONAL EMBEDDINGS FOR ESC-50 MEL SPECTROGRAMS
+            # After pos_embed initialization
+            if self.is_video:
+                # For video/tubelet mode: T * H * W patches  
+                seq_len = (self.num_frames // self.tubelet_size) * \
+                        (self.img_height // self.patch_size) * \
+                        (self.img_width // self.patch_size)
+            else:
+                # For regular "image" mode (including mel spectrograms treated as 2D images)
+                # img_height = frequency bins (128), img_width = time steps (313)
+                seq_len = (self.img_height // self.patch_size) * (self.img_width // self.patch_size)
+
+            # Resize pos_embed to match actual sequence length
+            self.pos_embed.data = self._resize_pos_embed(self.pos_embed.data, seq_len)
+
         self.init_std = init_std
         self.apply(self._init_weights)
         self._rescale_blocks()
@@ -270,6 +286,29 @@ class VisionTransformer(nn.Module):
             )
             pos_embed = pos_embed.permute(0, 2, 3, 1).view(1, -1, dim)
             return pos_embed
+
+    def _resize_pos_embed(self, old_embed, new_num_patches):
+        """Resize positional embedding to match actual number of patches"""
+        old_num = old_embed.shape[1]  # Current number of patches in pos_embed
+        if old_num == new_num_patches:
+            return old_embed
+        
+        # For non-square inputs (like spectrograms), we need to be more careful
+        # Try to reshape to closest square, interpolate, then reshape to target
+        old_sqrt = int(math.sqrt(old_num))
+        new_sqrt = int(math.sqrt(new_num_patches))
+        
+        if old_sqrt * old_sqrt == old_num and new_sqrt * new_sqrt == new_num_patches:
+            # Both are perfect squares - use 2D interpolation
+            old = old_embed.reshape(1, old_sqrt, old_sqrt, -1).permute(0, 3, 1, 2)
+            new = F.interpolate(old, size=(new_sqrt, new_sqrt), mode='bilinear', align_corners=False)
+            new = new.permute(0, 2, 3, 1).reshape(1, new_num_patches, -1)
+        else:
+            # Non-square case - use linear interpolation
+            new = F.interpolate(old_embed.permute(0, 2, 1), size=new_num_patches, mode='linear', align_corners=False)
+            new = new.permute(0, 2, 1)
+        
+        return new
 
 
 def vit_large(patch_size=16, **kwargs):
