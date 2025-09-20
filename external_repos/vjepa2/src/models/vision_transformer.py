@@ -225,63 +225,69 @@ class VisionTransformer(nn.Module):
         return x
 
     def interpolate_pos_encoding(self, x, pos_embed):
-
+        """
+        Interpolate positional embeddings for different input sizes.
+        Handles both square (original V-JEPA2) and rectangular (audio spectrogram) inputs.
+        """
         _, N, dim = pos_embed.shape
-
+        
         if self.is_video:
-
-            # If pos_embed already correct size, just return
+            # Video case - 3D interpolation
             _, _, T, H, W = x.shape
+            
+            # Check if we already have the correct size
             if H == self.img_height and W == self.img_width and T == self.num_frames:
                 return pos_embed
-
-            # Just chop off last N tokens of positional embedding
-            elif H == self.img_height and W == self.img_width and T < self.num_frames:
-                new_N = int((T // self.tubelet_size) * (H // self.patch_size) * (W // self.patch_size))
-                return pos_embed[:, :new_N, :]
-
-            # Convert depth, height, width of input to be measured in patches
-            # instead of pixels/frames
-            T = T // self.tubelet_size
-            H = H // self.patch_size
-            W = W // self.patch_size
-
-            # Compute the initialized shape of the positional embedding measured
-            # in patches
-            N_t = self.num_frames // self.tubelet_size
-            N_h = self.img_height // self.patch_size
-            N_w = self.img_width // self.patch_size
-            assert N_h * N_w * N_t == N, "Positional embedding initialized incorrectly"
-
-            # Compute scale factor for spatio-temporal interpolation
-            scale_factor = (T / N_t, H / N_h, W / N_w)
-
-            pos_embed = nn.functional.interpolate(
-                pos_embed.reshape(1, N_t, N_h, N_w, dim).permute(0, 4, 1, 2, 3),
-                scale_factor=scale_factor,
-                mode="trilinear",
-            )
-            pos_embed = pos_embed.permute(0, 2, 3, 4, 1).view(1, -1, dim)
-            return pos_embed
-
+                
+            if self.handle_non_square_inputs:
+                # For rectangular inputs - just return pos_embed since it's pre-sized correctly
+                # Our custom rectangular pos_embed generation handles the sizing at init time
+                return pos_embed
+            else:
+                # Original V-JEPA2 square interpolation logic
+                T = T // self.tubelet_size
+                H = H // self.patch_size
+                W = W // self.patch_size
+                
+                Nt = self.num_frames // self.tubelet_size
+                Nh = self.img_height // self.patch_size
+                Nw = self.img_width // self.patch_size
+                
+                assert Nh * Nw * Nt == N, "Positional embedding initialized incorrectly"
+                
+                scale_factor = (T / Nt, H / Nh, W / Nw)
+                pos_embed = F.interpolate(
+                    pos_embed.reshape(1, Nt, Nh, Nw, dim).permute(0, 4, 1, 2, 3),
+                    scale_factor=scale_factor,
+                    mode='trilinear',
+                    align_corners=False
+                )
+                return pos_embed.permute(0, 2, 3, 4, 1).view(1, -1, dim)
+        
         else:
-
-            # If pos_embed already correct size, just return
+            # Image case - 2D interpolation
             _, _, H, W = x.shape
+            
+            # Check if we already have the correct size
             if H == self.img_height and W == self.img_width:
                 return pos_embed
+                
+            if self.handle_non_square_inputs:
+                # For rectangular inputs - return pos_embed since it's pre-sized correctly  
+                return pos_embed
+            else:
+                # Original V-JEPA2 square interpolation logic
+                npatch = H // self.patch_size * W // self.patch_size
+                scale_factor = math.sqrt(npatch / N)
+                
+                pos_embed = F.interpolate(
+                    pos_embed.reshape(1, int(math.sqrt(N)), int(math.sqrt(N)), dim).permute(0, 3, 1, 2),
+                    scale_factor=scale_factor,
+                    mode='bicubic',
+                    align_corners=False
+                )
+                return pos_embed.permute(0, 2, 3, 1).view(1, -1, dim)
 
-            # Compute scale factor for spatial interpolation
-            npatch = (H // self.patch_size) * (W // self.patch_size)
-            scale_factor = math.sqrt(npatch / N)
-
-            pos_embed = nn.functional.interpolate(
-                pos_embed.reshape(1, int(math.sqrt(N)), int(math.sqrt(N)), dim).permute(0, 3, 1, 2),
-                scale_factor=scale_factor,
-                mode="bicubic",
-            )
-            pos_embed = pos_embed.permute(0, 2, 3, 1).view(1, -1, dim)
-            return pos_embed
 
     def _resize_pos_embed(self, old_embed, new_num_patches):
         """Resize positional embedding to match actual number of patches"""
