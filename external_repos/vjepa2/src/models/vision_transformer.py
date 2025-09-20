@@ -12,7 +12,7 @@ import torch.nn as nn
 from src.masks.utils import apply_masks
 from src.models.utils.modules import Block
 from src.models.utils.patch_embed import PatchEmbed, PatchEmbed3D
-from src.models.utils.pos_embs import get_2d_sincos_pos_embed, get_3d_sincos_pos_embed
+from src.models.utils.pos_embs import get_2d_sincos_pos_embed, get_3d_sincos_pos_embed, get_3d_sincos_pos_embed_rectangular, get_2d_sincos_pos_embed_rectangular
 from src.utils.tensors import trunc_normal_
 
 import torch.nn.functional as F
