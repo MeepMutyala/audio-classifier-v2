@@ -239,7 +239,7 @@ class VisionTransformer(nn.Module):
             if H == self.img_height and W == self.img_width and T == self.num_frames:
                 return pos_embed
                 
-            if self.handle_non_square_inputs:
+            if self.handle_nonsquare_inputs:
                 # For rectangular inputs - just return pos_embed since it's pre-sized correctly
                 # Our custom rectangular pos_embed generation handles the sizing at init time
                 return pos_embed
@@ -272,7 +272,7 @@ class VisionTransformer(nn.Module):
             if H == self.img_height and W == self.img_width:
                 return pos_embed
                 
-            if self.handle_non_square_inputs:
+            if self.handle_nonsquare_inputs:
                 # For rectangular inputs - return pos_embed since it's pre-sized correctly  
                 return pos_embed
             else:
