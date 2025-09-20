@@ -152,6 +152,8 @@ class ESC50Dataset(Dataset):
             # For V-JEPA2: create tubelets
             mel_spec = preprocessor.load_and_preprocess(audio_path)
             data = self.convert_to_tubelets(mel_spec)
+            # Add channel dimension: [16, 128, 20] → [1, 16, 128, 20]
+            data = data.unsqueeze(0)
         else:
             # For Mamba and Liquid S4: regular mel-spectrograms
             data = preprocessor.load_and_preprocess(audio_path)
