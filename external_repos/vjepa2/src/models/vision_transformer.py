@@ -119,20 +119,21 @@ class VisionTransformer(nn.Module):
 
     def _init_pos_embed(self, pos_embed):
         embed_dim = pos_embed.size(-1)
-        grid_height = self.img_height // self.patch_size  # 128 // 16 = 8
-        grid_width = self.img_width // self.patch_size    # 313 // 16 = 19
+        grid_height = self.img_height // self.patch_size  # 8
+        grid_width = self.img_width // self.patch_size    # 19
         
         if self.is_video:
-            grid_depth = self.num_frames // self.tubelet_size  # 16 // 2 = 8
-            # Use the correct 3D grid dimensions
+            grid_depth = self.num_frames // self.tubelet_size  # 8
+            # Pass separate scalar arguments, NOT a tuple
             sincos = get_3d_sincos_pos_embed(
-                embed_dim, (grid_height, grid_width), grid_depth, cls_token=False, uniform_power=self.uniform_power
+                embed_dim, grid_height, grid_width, grid_depth, cls_token=False, uniform_power=self.uniform_power
             )
         else:
-            # Use the correct 2D grid dimensions  
-            sincos = get_2d_sincos_pos_embed(embed_dim, (grid_height, grid_width), cls_token=False)
+            # Pass separate scalar arguments, NOT a tuple  
+            sincos = get_2d_sincos_pos_embed(embed_dim, grid_height, grid_width, cls_token=False)
         
         pos_embed.copy_(torch.from_numpy(sincos).float().unsqueeze(0))
+
 
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
