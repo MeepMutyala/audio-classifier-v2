@@ -17,7 +17,7 @@ class VJEPA2AudioClassifier(nn.Module):
                  img_size=(128, 15),  # (n_mels, time_frames)
                  patch_size=16,
                  num_frames=16,
-                 tubelet_size=2,
+                 tubelet_size=,
                  embed_dim=384,
                  depth=8,
                  num_heads=8):

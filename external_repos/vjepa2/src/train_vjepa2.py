@@ -28,7 +28,7 @@ def train():
         img_size=(128, 15),  # [T, H, W] = [num_frames, n_mels, time_per_frame]
         patch_size=8,
         num_frames=10,
-        tubelet_size=2,
+        tubelet_size=1,
         embed_dim=384,
         depth=8,
         num_heads=8
