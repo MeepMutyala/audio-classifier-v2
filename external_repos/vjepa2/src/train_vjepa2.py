@@ -15,7 +15,7 @@ from tqdm import tqdm
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--esc50_path', type=str, default='data/ESC-50')
-    parser.add_argument('--batch_size', type=int, default=8)
+    parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--workers', type=int, default=2)
     parser.add_argument('--lr', type=float, default=1e-4)
     parser.add_argument('--weight_decay', type=float, default=0.01)
@@ -38,7 +38,7 @@ def train():
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f"🚀 Training V-JEPA2 on {device}")
     
-    # V-JEPA2 uses tubelet format and smaller batches (memory intensive)
+    # V-JEPA2 uses tubelet format for temporal modeling
     train_loader, val_loader, test_loader, num_classes = create_dataloaders(
         esc50_path=args.esc50_path,
         model_type='tubelet',  # Important: V-JEPA2 uses tubelets!
