@@ -47,8 +47,15 @@ class VJEPA2AudioClassifier(nn.Module):
             num_classes=num_classes,
         )
         
-    def forward(self, x):
-        # x: [batch, 1, T, H, W] where T=time, H=freq, W=context or 1
-        features = self.backbone(x)  # [batch, num_patches, embed_dim]
-        logits = self.classifier(features)  # [batch, num_classes]
+    def forward(self, x, apply_temporal_mask=False):
+        # x: [B, C, T, H, W] = [batch, 1, num_frames, n_mels, time_per_frame]
+        if apply_temporal_mask and self.training:
+            # Mask 25% of temporal frames (V-JEPA2 principle)
+            B, C, T, H, W = x.shape
+            num_to_mask = T // 4  # Mask 4 out of 16 frames
+            mask_idxs = torch.randperm(T, device=x.device)[:num_to_mask]
+            x[:, :, mask_idxs, :, :] = 0  # Zero out masked frames
+        
+        features = self.backbone(x)  # [B, num_patches, embed_dim]
+        logits = self.classifier(features)  # [B, num_classes]
         return logits
