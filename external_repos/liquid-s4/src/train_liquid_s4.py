@@ -84,9 +84,9 @@ def train():
         all_labels = torch.cat(all_labels)
 
         acc = (all_preds == all_labels).float().mean().item()
-        f1 = f1_score(all_labels, all_preds, average='macro')
-        prec = precision_score(all_labels, all_preds, average='macro')
-        rec = recall_score(all_labels, all_preds, average='macro')
+        f1 = f1_score(all_labels, all_preds, average='macro', zero_division=0)
+        prec = precision_score(all_labels, all_preds, average='macro', zero_division=0)
+        rec = recall_score(all_labels, all_preds, average='macro', zero_division=0)
 
         print(f"Epoch {epoch}: TrainLoss={avg_loss:.4f}  ValAcc={acc:.4f}  F1={f1:.4f}  Prec={prec:.4f}  Rec={rec:.4f}")
 
