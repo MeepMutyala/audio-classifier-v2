@@ -36,6 +36,7 @@ class VJEPA2AudioClassifier(nn.Module):
             mlp_ratio=4.0,
             qkv_bias=True,
             norm_layer=nn.LayerNorm,
+            handle_nonsquare_inputs=True
         )
         
         # Create classification head
