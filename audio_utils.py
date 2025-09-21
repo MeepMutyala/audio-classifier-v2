@@ -170,24 +170,25 @@ class ESC50Dataset(Dataset):
     
     def convert_to_tubelets(self, mel_spec):
         """
-        mel_spec: Tensor [time_steps=155, n_mels=128]
-        Returns: Tensor [num_frames=10, n_mels=128, time_per_frame=15]
+        Audio-JEPA standard: Power-of-2 dimensions with center cropping
+        mel_spec: [155, 128] → [16, 128, 8]
         """
-        # 1. Unpack dimensions
-        time_steps, n_mels = mel_spec.shape
-
-        # 2. Fixed parameters
-        num_frames = 10
-        time_per_frame = time_steps // num_frames  # 155 // 10 = 15
-
-        # 3. Trim to exact multiple
-        effective_length = num_frames * time_per_frame  # 150
-        mel_spec = mel_spec[:effective_length]
-
-        # 4. Reshape and permute
-        frames = mel_spec.view(num_frames, time_per_frame, n_mels)      # [10,15,128]
-        tubelets = frames.permute(0, 2, 1)                              # [10,128,15]
-
+        time_steps, n_mels = mel_spec.shape  # [155, 128]
+        
+        # Power-of-2 parameters (Audio-JEPA best practice)
+        num_frames = 16        # 2^4 temporal frames  
+        time_per_frame = 8     # 2^3 time steps per frame
+        
+        # Center crop to preserve important audio content
+        target_length = num_frames * time_per_frame  # 128
+        start_idx = (time_steps - target_length) // 2  # 13
+        end_idx = start_idx + target_length            # 141
+        
+        mel_spec = mel_spec[start_idx:end_idx]  # [128, 128]
+        
+        # Reshape: [128, 128] → [16, 8, 128] → [16, 128, 8]
+        frames = mel_spec.view(num_frames, time_per_frame, n_mels)
+        tubelets = frames.permute(0, 2, 1)
         return tubelets
 
 
