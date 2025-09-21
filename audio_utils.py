@@ -118,7 +118,7 @@ class ESC50Preprocessor:
 
 class ESC50Dataset(Dataset):
     def __init__(self, dataframe, esc50_path, preprocessor=None,
-                 model_type='sequence', augment=False, augment_factor=2):
+                 model_type='sequence', augment=False, augment_factor=3):
         self.df = dataframe.reset_index(drop=True)
         self.esc50_path = Path(esc50_path)
         self.preprocessor = preprocessor or ESC50Preprocessor()
@@ -169,28 +169,14 @@ class ESC50Dataset(Dataset):
         return data, torch.tensor(label, dtype=torch.long)
     
     def convert_to_tubelets(self, mel_spec):
-        """Convert mel-spectrogram to tubelet format for V-JEPA2"""
-        print(f"DEBUG: convert_to_tubelets input shape: {mel_spec.shape}")
+        # Better: Use 10 frames for cleaner division
+        num_frames = 10  
+        time_per_frame = 155 // 10  # = 15.5 → 15
+        effective_length = 10 * 15  # = 150 (lose only 5 frames)
         
-        num_frames = 16
-        time_steps, n_mels = mel_spec.shape
-        print(f"DEBUG: time_steps={time_steps}, n_mels={n_mels}")
-        
-        time_per_frame = time_steps // num_frames
-        print(f"DEBUG: time_per_frame={time_per_frame}")
-        
-        effective_length = num_frames * time_per_frame
-        print(f"DEBUG: effective_length={effective_length}")
-        
-        # Trim to exact multiple of frames
         mel_spec = mel_spec[:effective_length]
-        print(f"DEBUG: After trim: {mel_spec.shape}")
-        
-        # Reshape: (num_frames, time_per_frame, n_mels) → (num_frames, n_mels, time_per_frame)
         frames = mel_spec.view(num_frames, time_per_frame, n_mels)
-        tubelets = frames.permute(0, 2, 1)
-        
-        print(f"DEBUG: Final tubelets shape: {tubelets.shape}")
+        tubelets = frames.permute(0, 2, 1)  # [10, 128, 15]
         return tubelets
 
 def create_esc50_splits(path):
@@ -203,7 +189,7 @@ def create_esc50_splits(path):
     return train_df, val_df, test_df
 
 def create_dataloaders(esc50_path=None, model_type='sequence', batch_size=32,
-                      num_workers=4, augment=True, augment_factor=2):
+                      num_workers=4, augment=True, augment_factor=3):
     """Create DataLoaders using ESC 50 path."""
 
     if esc50_path is None:
