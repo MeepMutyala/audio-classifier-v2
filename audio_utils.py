@@ -169,15 +169,27 @@ class ESC50Dataset(Dataset):
         return data, torch.tensor(label, dtype=torch.long)
     
     def convert_to_tubelets(self, mel_spec):
-        # Better: Use 10 frames for cleaner division
-        num_frames = 10  
-        time_per_frame = 155 // 10  # = 15.5 → 15
-        effective_length = 10 * 15  # = 150 (lose only 5 frames)
-        
+        """
+        mel_spec: Tensor [time_steps=155, n_mels=128]
+        Returns: Tensor [num_frames=10, n_mels=128, time_per_frame=15]
+        """
+        # 1. Unpack dimensions
+        time_steps, n_mels = mel_spec.shape
+
+        # 2. Fixed parameters
+        num_frames = 10
+        time_per_frame = time_steps // num_frames  # 155 // 10 = 15
+
+        # 3. Trim to exact multiple
+        effective_length = num_frames * time_per_frame  # 150
         mel_spec = mel_spec[:effective_length]
-        frames = mel_spec.view(num_frames, time_per_frame, n_mels)
-        tubelets = frames.permute(0, 2, 1)  # [10, 128, 15]
+
+        # 4. Reshape and permute
+        frames = mel_spec.view(num_frames, time_per_frame, n_mels)      # [10,15,128]
+        tubelets = frames.permute(0, 2, 1)                              # [10,128,15]
+
         return tubelets
+
 
 def create_esc50_splits(path):
     """Load ESC-50 metadata and split into train/val/test."""
