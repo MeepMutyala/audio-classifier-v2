@@ -26,7 +26,7 @@ def train():
     model = VJEPA2AudioClassifier(
         num_classes=num_classes,
         img_size=(128, 15),  # (n_mels, time_frames) - adjust based on your mel-spec size
-        patch_size=16,
+        patch_size=8,
         num_frames=10,
         tubelet_size=2,
         embed_dim=384,
