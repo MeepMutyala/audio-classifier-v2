@@ -65,7 +65,7 @@ class ESC50Preprocessor:
         mel_spec = mel_spec.squeeze(0).T
         return mel_spec
     
-    def center_crop_or_pad(mel_spec, target_length):
+    def center_crop_or_pad(self, mel_spec, target_length):
         """
         Center crop or pad mel spectrogram to target length.
         Preserves beginning, middle, and end information symmetrically.
