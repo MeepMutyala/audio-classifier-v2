@@ -33,7 +33,7 @@ class ESC50Preprocessor:
         if augment:
             self.time_mask = torchaudio.transforms.TimeMasking(time_mask_param=10)
             self.freq_mask = torchaudio.transforms.FrequencyMasking(freq_mask_param=8)
-    
+
     def load_and_preprocess(self, filepath):
         """Load audio and convert to mel-spectrogram"""
         filepath = Path(filepath)
@@ -46,14 +46,6 @@ class ESC50Preprocessor:
         if waveform.shape[0] > 1:
             waveform = waveform.mean(dim=0, keepdim=True)
         
-        # ESC-50 clips are exactly 5 seconds, but ensure consistency
-        if waveform.shape[1] != self.max_length:
-            if waveform.shape[1] > self.max_length:
-                waveform = waveform[:, :self.max_length]
-            else:
-                padding = self.max_length - waveform.shape[1]
-                waveform = torch.nn.functional.pad(waveform, (0, padding))
-        
         # Apply waveform augmentations if enabled
         if self.augment:
             waveform = self.apply_waveform_augmentation(waveform)
@@ -61,6 +53,9 @@ class ESC50Preprocessor:
         # Convert to mel-spectrogram
         mel_spec = self.mel_transform(waveform)
         mel_spec = torch.log(mel_spec + 1e-8)
+
+        EXPECTED_TIME_FRAMES = 155  # Based on 5 seconds at your settings
+        mel_spec = self.center_crop_or_pad(mel_spec, EXPECTED_TIME_FRAMES)
         
         # Apply spectrogram augmentations if enabled
         if self.augment:
@@ -70,6 +65,30 @@ class ESC50Preprocessor:
         mel_spec = mel_spec.squeeze(0).T
         return mel_spec
     
+    def center_crop_or_pad(mel_spec, target_length):
+        """
+        Center crop or pad mel spectrogram to target length.
+        Preserves beginning, middle, and end information symmetrically.
+        """
+        current_length = mel_spec.shape[1]  # Time dimension
+        
+        if current_length == target_length:
+            return mel_spec
+        
+        elif current_length > target_length:
+            # Center crop - remove equally from both sides
+            excess = current_length - target_length
+            start = excess // 2
+            end = start + target_length
+            return mel_spec[:, start:end]
+        
+        else:
+            # Center pad - add equally to both sides  
+            deficit = target_length - current_length
+            pad_left = deficit // 2
+            pad_right = deficit - pad_left
+            return torch.nn.functional.pad(mel_spec, (pad_left, pad_right))
+
     def apply_waveform_augmentation(self, waveform):
         """Apply augmentations appropriate for environmental sounds"""
         # Small time shift
@@ -96,18 +115,6 @@ class ESC50Preprocessor:
         if torch.rand(1) < 0.3:
             mel_spec = self.freq_mask(mel_spec)
         return mel_spec
-
-    def load_and_preprocess_tubelets(self, filepath):
-        """Load audio and convert directly to tubelet format for V-JEPA2"""
-        # Load regular mel-spectrogram
-        mel_spec = self.load_and_preprocess(filepath)  # [time_steps, n_mels]
-        
-        # Convert to V-JEPA2 tubelet format
-        time_steps, n_mels = mel_spec.shape
-        
-        # Format: [channels=1, time, freq, context]
-        tubelets = mel_spec.T.unsqueeze(0).unsqueeze(-1)  # [1, n_mels, time_steps, 1]
-        return tubelets
 
 class ESC50Dataset(Dataset):
     def __init__(self, dataframe, esc50_path, preprocessor=None,
