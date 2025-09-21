@@ -14,7 +14,7 @@ from models.attentive_pooler import AttentiveClassifier
 class VJEPA2AudioClassifier(nn.Module):
     def __init__(self, 
                  num_classes=50,
-                 img_size=(10, 128, 15),  # (n_mels, time_frames)
+                 img_size=(128, 15),  # (n_mels, time_frames)
                  patch_size=16,
                  num_frames=16,
                  tubelet_size=2,
