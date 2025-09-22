@@ -2,7 +2,7 @@ import torch
 import sys
 from pathlib import Path
 import pandas as pd
-from audio_utils import ESC50Dataset, ESC50Preprocessor, createesc50splits
+from audio_utils import ESC50Dataset, ESC50Preprocessor, create_esc50_splits
 
 # Import your models
 from liquidS4_audio import LiquidS4AudioClassifier
@@ -34,7 +34,7 @@ def load_model(model_name, num_classes=50, device="cpu"):
     return model.to(device)
 
 def get_item_from_esc50(esc50_path, index=0, modeltype="sequence"):
-    traindf, valdf, testdf = createesc50splits(esc50_path)
+    traindf, valdf, testdf = create_esc50_splits(esc50_path)
     testset = ESC50Dataset(testdf, esc50_path, modeltype=modeltype, augment=False)
     data, label = testset[index]
     return data.unsqueeze(0), label  # Batch size 1
