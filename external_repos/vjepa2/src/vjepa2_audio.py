@@ -15,7 +15,7 @@ class VJEPA2AudioClassifier(nn.Module):
     def __init__(self,
                  num_classes=50,
                  img_size=(128, 8), # (n_mels, time_frames)
-                 num_frames=16,
+                 num_frames=19,
                  patch_size=8,
                  tubelet_size=1,
                  embed_dim=384,

@@ -176,17 +176,17 @@ class ESC50Dataset(Dataset):
         time_steps, n_mels = mel_spec.shape  # [155, 128]
         
         # Power-of-2 parameters (Audio-JEPA best practice)
-        num_frames = 16        # 2^4 temporal frames  
+        num_frames = 19        # up from 16 
         time_per_frame = 8     # 2^3 time steps per frame
         
         # Center crop to preserve important audio content
-        target_length = num_frames * time_per_frame  # 128
-        start_idx = (time_steps - target_length) // 2  # 13
-        end_idx = start_idx + target_length            # 141
+        target_length = num_frames * time_per_frame  # 152
+        start_idx = (time_steps - target_length) // 2  
+        end_idx = start_idx + target_length            
         
-        mel_spec = mel_spec[start_idx:end_idx]  # [128, 128]
+        mel_spec = mel_spec[start_idx:end_idx]  
         
-        # Reshape: [128, 128] → [16, 8, 128] → [16, 128, 8]
+        # Reshape: [128, 128] → [19, 8, 128] → [19, 128, 8]
         frames = mel_spec.view(num_frames, time_per_frame, n_mels)
         tubelets = frames.permute(0, 2, 1)
         return tubelets

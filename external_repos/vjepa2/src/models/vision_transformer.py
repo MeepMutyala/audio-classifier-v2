@@ -22,9 +22,9 @@ class VisionTransformer(nn.Module):
 
     def __init__(
         self,
-        img_size=(224, 224),
-        patch_size=16,
-        num_frames=1,
+        img_size=(128, 8),
+        patch_size=8,
+        num_frames=19,
         tubelet_size=2,
         in_chans=3,
         embed_dim=768,
