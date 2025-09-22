@@ -6,11 +6,11 @@ from audio_utils import ESC50Dataset, ESC50Preprocessor, create_esc50_splits
 
 model_name = sys.argv[1].lower()
 if model_name == "liquids4":
-    from liquidS4_audio import LiquidS4AudioClassifier as ModelClass
+    from liquidS4_audio import LiquidS4AudioClassifier
 elif model_name == "mamba":
-    from mamba_audio import MambaAudioClassifier as ModelClass
+    from mamba_audio import MambaAudioClassifier
 elif model_name == "vjepa2":
-    from vjepa2_audio import VJEPA2AudioClassifier as ModelClass
+    from vjepa2_audio import VJEPA2AudioClassifier
 else:
     raise ValueError("Unknown model: %s" % model_name)
 
