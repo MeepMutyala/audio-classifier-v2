@@ -53,7 +53,7 @@ class LiquidS4AudioClassifier(nn.Module):
                 "B": 0.001
             },
             "n_ssm": 1,
-            "liquid_kernel": "polyb",  # Can be set to "polyb" or "kb" for liquid variants
+            "liquid_kernel": "kb",  # Can be set to "polyb" or "kb" for liquid variants
             "liquid_degree": 2,
             "allcombs": True,
             "lcontract": None,
