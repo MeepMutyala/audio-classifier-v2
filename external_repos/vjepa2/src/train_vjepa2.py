@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument('--patience', type=int, default=8)
     
     # V-JEPA2 specific model parameters
-    parser.add_argument('--num_frames', type=int, default=16)
+    parser.add_argument('--num_frames', type=int, default=19)
     parser.add_argument('--patch_size', type=int, default=8)
     parser.add_argument('--tubelet_size', type=int, default=1)
     parser.add_argument('--embed_dim', type=int, default=384)
