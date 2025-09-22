@@ -4,10 +4,15 @@ from pathlib import Path
 import pandas as pd
 from audio_utils import ESC50Dataset, ESC50Preprocessor, create_esc50_splits
 
-# Import your models
-from liquidS4_audio import LiquidS4AudioClassifier
-from mamba_audio import MambaAudioClassifier
-from vjepa2_audio import VJEPA2AudioClassifier
+model_name = sys.argv[1].lower()
+if model_name == "liquids4":
+    from liquidS4_audio import LiquidS4AudioClassifier as ModelClass
+elif model_name == "mamba":
+    from mamba_audio import MambaAudioClassifier as ModelClass
+elif model_name == "vjepa2":
+    from vjepa2_audio import VJEPA2AudioClassifier as ModelClass
+else:
+    raise ValueError("Unknown model: %s" % model_name)
 
 MODEL_CLASSES = {
     "liquids4": LiquidS4AudioClassifier,
