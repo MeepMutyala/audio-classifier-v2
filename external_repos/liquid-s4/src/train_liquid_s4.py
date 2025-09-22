@@ -29,7 +29,7 @@ def parse_args():
 def train():
     args = parse_args()
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print(f"🚀 Training Liquid-S4 on {device}")
+    print(f"Training Liquid-S4 on {device}")
 
     train_loader, val_loader, test_loader, num_classes = create_dataloaders(
         esc50_path=args.esc50_path,
@@ -105,7 +105,7 @@ def train():
                 print(f"⏹️ Early stopping at epoch {epoch}")
                 break
 
-    print(f"🏆 Best Validation Accuracy: {best_acc:.4f}")
+    print(f"Best Validation Accuracy: {best_acc:.4f}")
 
 if __name__ == '__main__':
     train()

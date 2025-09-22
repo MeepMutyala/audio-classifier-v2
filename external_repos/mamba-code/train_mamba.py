@@ -28,7 +28,7 @@ def parse_args():
 def train():
     args = parse_args()
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print(f"🚀 Training Mamba on {device}")
+    print(f"Training Mamba on {device}")
     
     # Load data - path is relative to workspace root
     train_loader, val_loader, test_loader, num_classes = create_dataloaders(
@@ -55,7 +55,7 @@ def train():
     
     best_acc = 0.0
     patience_counter = 0
-    print(f"🚀 Training Mamba with {sum(p.numel() for p in model.parameters()):,} parameters")
+    print(f"Training Mamba with {sum(p.numel() for p in model.parameters()):,} parameters")
     
     for epoch in range(1, args.epochs + 1):
         # Training
@@ -111,7 +111,7 @@ def train():
                 print(f"⏹️ Early stopping at epoch {epoch}")
                 break
     
-    print(f"🏆 Best Validation Accuracy: {best_acc:.4f}")
+    print(f"Best Validation Accuracy: {best_acc:.4f}")
 
 if __name__ == '__main__':
     train()

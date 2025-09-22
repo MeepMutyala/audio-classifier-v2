@@ -37,7 +37,7 @@ def parse_args():
 def train():
     args = parse_args()
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print(f"🚀 Training V-JEPA2 Audio Classifier on {device}")
+    print(f"Training V-JEPA2 Audio Classifier on {device}")
     
     # Create dataloaders
     train_loader, val_loader, test_loader, num_classes = create_dataloaders(
@@ -65,7 +65,7 @@ def train():
     scheduler = CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=1e-6)
     criterion = nn.CrossEntropyLoss()
     
-    print(f"🚀 Training V-JEPA2 with {sum(p.numel() for p in model.parameters()):,} parameters")
+    print(f"Training V-JEPA2 with {sum(p.numel() for p in model.parameters()):,} parameters")
     
     best_acc = 0.0
     patience_counter = 0
@@ -129,7 +129,7 @@ def train():
                 print(f"⏹️ Early stopping at epoch {epoch}")
                 break
     
-    print(f"🏆 Best Validation Accuracy: {best_acc:.4f}")
+    print(f"Best Validation Accuracy: {best_acc:.4f}")
     
     # Final test evaluation
     model.load_state_dict(torch.load('vjepa2_audio_best.pth'))
@@ -146,7 +146,7 @@ def train():
             test_correct += (predicted == batch_y).sum().item()
     
     test_acc = test_correct / test_total
-    print(f'🎯 Final V-JEPA2 Audio Classification Accuracy: {test_acc:.4f}')
+    print(f'Final V-JEPA2 Audio Classification Accuracy: {test_acc:.4f}')
     return test_acc
 
 if __name__ == '__main__':
