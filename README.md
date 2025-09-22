@@ -2,6 +2,8 @@
 
 An audio classification project that implements and compares three SOTA Structured State Space Model (SSMs) architectures on the ESC-50 environmental sound classification dataset.
 
+[Quick Overview + Retro](https://docs.google.com/presentation/d/1ySfkC7MI34fKO6nKvOt_JyeWldQ4C01XLqKFzIjy0oI/edit?usp=sharing)
+
 ## Project Overview
 
 This project explores the effectiveness of different sequence modeling approaches for audio classification:
