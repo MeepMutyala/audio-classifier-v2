@@ -170,12 +170,11 @@ class ESC50Dataset(Dataset):
     
     def convert_to_tubelets(self, mel_spec):
         """
-        Audio-JEPA standard: Power-of-2 dimensions with center cropping
-        mel_spec: [155, 128] → [16, 128, 8]
+        Center cropped tubelets
+        mel_spec: [155, 128] → [19, 128, 8]
         """
         time_steps, n_mels = mel_spec.shape  # [155, 128]
         
-        # Power-of-2 parameters (Audio-JEPA best practice)
         num_frames = 19        # up from 16 
         time_per_frame = 8     # 2^3 time steps per frame
         
